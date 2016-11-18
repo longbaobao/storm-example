@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Log Dashboard</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<link href="assets/css/bootstrap.css" rel="stylesheet">
+
+	<link href="assets/css/bootstrap-responsive.css" rel="stylesheet">
+	<link href="assets/css/nv.d3.css" rel="stylesheet">
+
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/ico/apple-touch-icon-144-precomposed.png">
+	<link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/ico/apple-touch-icon-114-precomposed.png">
+	<link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/ico/apple-touch-icon-72-precomposed.png">
+	<link rel="apple-touch-icon-precomposed" href="assets/ico/apple-touch-icon-57-precomposed.png">
+	<link rel="shortcut icon" href="assets/ico/favicon.png">
+</head>
+
+<body>
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+				<button type="button" class="btn btn-navbar" data-toggle="collapse"
+					data-target=".nav-collapse">
+					<span class="ico-bar"></span>
+					<span class="ico-bar"></span>
+					<span class="ico-bar"></span>
+				</button>
+				<a class="brand" href="#">Log Dashboard</a>
+
+				<div class="nav-collapse collapse">
+					<ul class="nav">
+						<li class="">
+							<a href="#">Home</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="hero-unit">
+			<div id="chart">
+				<svg style="height: 300px;"></svg>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="span4">
+				<h2>Static Timeseries</h2>
+
+				<p>This graph shows a static view of the log volumes of a given time period by day</p>
+				<button id="updateToggleButton" type="button" class="btn btn-primary">
+					Toggle Updates
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="footer">
+		<div class="container">
+			<p>Designed and built by Learning Storm</p>
+			<ul class="footer-links">
+				<li><a href="http://d3js.org/">D3</a></li>
+				<li class="muted">&middot;</li>
+				<li><a href="http://github.com/twitter/bootstrap">D3</a></li>
+				<li class="muted">&middot;</li>
+				<li><a href="http://storm-project.net/">Storm</a></li>
+			</ul>
+		</div>
+	</div>
+
+	<script src="assets/js/jquery.js"></script>
+	<script src="assets/js/jquery.flot.js"></script>
+	<script src="assets/js/bootstrap-transition.js"></script>
+	<script src="assets/js/bootstrap-alert.js"></script>
+	<script src="assets/js/bootstrap-modal.js"></script>
+	<script src="assets/js/bootstrap-dropdown.js"></script>
+	<script src="assets/js/bootstrap-scrollspy.js"></script>
+	<script src="assets/js/bootstrap-tab.js"></script>
+	<script src="assets/js/bootstrap-tooltip.js"></script>
+	<script src="assets/js/bootstrap-popover.js"></script>
+	<script src="assets/js/bootstrap-button.js"></script>
+	<script src="assets/js/bootstrap-collapse.js"></script>
+	<script src="assets/js/bootstrap-carousel.js"></script>
+	<script src="assets/js/bootstrap-typeahead.js"></script>
+
+	<script src="assets/js/d3.v2.js"></script>
+	<script src="assets/js/nv.d3.js"></script>
+	<script src="assets/js/utils.js"></script>
+
+	<script>
+		var chart;
+		var continueUpdates = true;
+
+		nv.addGraph(function() {
+			chart = nv.models.stackedAreaChart()
+				.x(function(d) { return d[0] })
+				.y(function(d) { return d[1] })
+				.clipEdge(true);
+
+			chart.xAxis
+					.tickFormat(function(d) { return d3.time.format('%X')(new Date(d)) })
+					.axisLabel('Time')
+					.showMaxMin(false);
+
+			chart.yAxis
+					.axisLabel('Volume')
+					.tickFormat(d3.format(',.2f'));
+
+			d3.select('#chart svg')
+					.datum(getdata())
+					.transition().duration(500)
+					.call(chart);
+
+			nv.utils.windowResize(chart.update);
+
+			chart.dispatch.on('stateChange', function(e) {
+				nv.log('New State: ', JSON.stringify(e));
+			});
+
+			return chart;
+		});
+
+
+		function update() {
+			fetch();
+			if ( continueUpdates ) {
+				setTimeout(update, 60000);
+			}
+		}
+
+		update();
+
+		$(document).ready(function() {
+			$('#updateToggleButton').bind('click', function() {
+				if ( continueUpdates ) {
+					continueUpdates = false;
+				}
+				else {
+					continueUpdates = true;
+					update();
+				}
+			});
+		});
+	</script>
+</body>
+</html>
